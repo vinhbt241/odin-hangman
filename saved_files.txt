@@ -1,0 +1,2 @@
+{"name":"vinh","word":"diego","display_guess":["_","_","_","_","_"],"wrong_guesses":3,"chars_guessed":["a","b","c"]}
+{"name":"an","word":"committees","display_guess":["c","_","_","_","_","_","_","_","_","_"],"wrong_guesses":3,"chars_guessed":["a","b","c","d"]}

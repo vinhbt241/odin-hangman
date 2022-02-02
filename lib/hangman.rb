@@ -1,3 +1,5 @@
+require "json"
+
 def select_random_word(dictionary)
   line_count = File.foreach(dictionary).count
 
@@ -109,7 +111,7 @@ end
 def get_char()
   message = "Type in character you want to guess: "
   char = ""
-  until char.length == 1 && char.match?(/[a-z]/)
+  until char.length == 1 && char.match?(/[a-z]/) || char == "save"
     print message
     message = "Invalid input, please try again: "
     char = gets.chomp.downcase
@@ -118,17 +120,10 @@ def get_char()
   char
 end
 
-def guess_word(word, display_guess, chars_guessed)
+def guess_word(word, display_guess, char)
   display_arr = display_guess.dup()
 
   word_to_guess = word.split("")
-
-  char = get_char()
-  while chars_guessed.any?(char)
-    puts "Character was already guessed, please try another character"
-    char = get_char
-  end
-  chars_guessed.push(char)
 
   index_of_chars = []
 
@@ -140,7 +135,7 @@ def guess_word(word, display_guess, chars_guessed)
     display_arr[index] = char
   end
 
-  return display_arr, chars_guessed
+  return display_arr
 end
 
 def still_have_guesses?(display_guess, wrong_guesses)
@@ -155,6 +150,35 @@ def center_multiline_string(string)
   centered_string.join("\n")
 end
 
+def save_file(name, word, display_guess, wrong_guesses, chars_guessed)
+  saved_files = File.open("saved_files.txt", "a")
+
+  file = JSON.dump({
+    name: name,
+    word: word,
+    display_guess: display_guess,
+    wrong_guesses: wrong_guesses,
+    chars_guessed: chars_guessed
+  })
+  
+  saved_files.puts file
+  saved_files.close()
+end
+
+def file_name_exist?(name)
+  saved_files = File.open("saved_files.txt", "r")
+  
+  until saved_files.eof?
+    line = saved_files.readline
+    hash = JSON.load(line)
+    if name == hash["name"]
+      return true
+    end
+  end
+
+  return false
+end
+
 # Run game
 dictionary = File.open("google-10000-english-no-swears.txt", "r")
 
@@ -167,15 +191,38 @@ wrong_guesses = 0
 chars_guessed = []
 
 while still_have_guesses?(display_guess, wrong_guesses)
-  system 'clear'
+  # system 'clear'
   puts "HANGMAN".center(50)
   puts center_multiline_string(draw_hangman(wrong_guesses))
   puts display_guess.join(" ").center(50)
   puts "\n"
   puts "Characters guessed: #{chars_guessed.join(" ")}"
-  player_guess, chars_guessed = guess_word(word, display_guess, chars_guessed)
-  wrong_guesses += 1 if player_guess == display_guess
-  display_guess = player_guess
+
+  char = get_char()
+
+  while chars_guessed.any?(char)
+    puts "Character was already guessed, please try another character"
+    char = get_char()
+  end
+
+  if char == "save"
+    print "Name your save file: "
+    name = gets.chomp
+
+    if file_name_exist?(name)
+      #modify saved files
+      puts "Save files #{name} was modified"
+    else
+      save_file(name, word, display_guess, wrong_guesses, chars_guessed)
+    end
+  else
+    chars_guessed.push(char)
+
+    player_guess = guess_word(word, display_guess,char)
+
+    wrong_guesses += 1 if player_guess == display_guess
+    display_guess = player_guess
+  end
 
 end
 
@@ -193,6 +240,7 @@ if word == display_guess.join("")
 else
   puts "OOPS, YOU LOST, TRY AGAIN?"
 end
+
 
 
 
