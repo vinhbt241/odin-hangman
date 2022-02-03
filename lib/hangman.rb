@@ -179,6 +179,49 @@ def file_name_exist?(name)
   return false
 end
 
+def copy_to_tmp_file(name, word, display_guess, wrong_guesses, chars_guessed)
+  out_file = File.open("tmp_saved_files.txt", "a")
+  
+  in_files = File.open("saved_files.txt", "r")
+  until in_files.eof?
+    line = in_files.readline
+    print line
+    hash = JSON.load(line)
+    if name == hash["name"]
+      hash = JSON.dump({
+        name: name,
+        word: word,
+        display_guess: display_guess,
+        wrong_guesses: wrong_guesses,
+        chars_guessed: chars_guessed
+      })
+    else
+      hash = JSON.dump({
+        name: hash["name"],
+        word: hash["word"],
+        display_guess: hash["display_guess"],
+        wrong_guesses: hash["wrong_guesses"],
+        chars_guessed: hash["chars_guessed"]
+      })
+    end
+
+    out_file.puts hash
+  end
+  out_file.close()
+end
+
+def modify_files(name)
+  File.truncate('saved_files.txt', 0)
+  saved_files = File.open("saved_files.txt", "a")
+  File.open("tmp_saved_files.txt", "r").readlines.each do |line|
+    saved_files.puts line
+  end
+  saved_files.close()
+  File.truncate('tmp_saved_files.txt', 0)
+
+  puts "Save file with label [#{name}] was modified"
+end
+
 # Run game
 dictionary = File.open("google-10000-english-no-swears.txt", "r")
 
@@ -206,12 +249,22 @@ while still_have_guesses?(display_guess, wrong_guesses)
   end
 
   if char == "save"
-    print "Name your save file: "
+    system 'clear'
+    
+    puts "SAVE FILES".center(50)
+
+    saved_files = File.open("saved_files.txt", "r").readlines.each_with_index do |file, index|
+      hash = JSON.load(file)
+      puts "#{index + 1}. #{hash["name"]}"
+    end
+
+    print "Name your save file, if you want to modify saved file, type name of saved file: "
     name = gets.chomp
 
     if file_name_exist?(name)
       #modify saved files
-      puts "Save files #{name} was modified"
+      copy_to_tmp_file(name, word, display_guess, wrong_guesses, chars_guessed)
+      modify_files(name)
     else
       save_file(name, word, display_guess, wrong_guesses, chars_guessed)
     end
