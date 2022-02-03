@@ -222,19 +222,63 @@ def modify_files(name)
   puts "Save file with label [#{name}] was modified"
 end
 
+def display_saved_files()
+  system 'clear'
+  
+  puts "SAVE FILES".center(50)
+
+  saved_files = File.open("saved_files.txt", "r").readlines.each_with_index do |file, index|
+    hash = JSON.load(file)
+    puts "#{index + 1}. #{hash["name"]}"
+  end
+end
+
 # Run game
-dictionary = File.open("google-10000-english-no-swears.txt", "r")
+print "Press N if you want to start a new game, or L to load a saved game: "
+input = gets.chomp
+until input == "N" || input == "L"
+  print "Invalid input, please try again: "
+  input = gets.chomp
+end
 
-word = select_random_word(dictionary)
+if input == "N"
+  dictionary = File.open("google-10000-english-no-swears.txt", "r")
 
-display_guess = Array.new(word.length, "_")
+  word = select_random_word(dictionary)
 
-wrong_guesses = 0
+  display_guess = Array.new(word.length, "_")
 
-chars_guessed = []
+  wrong_guesses = 0
+
+  chars_guessed = []
+else 
+  display_saved_files()
+
+  print ("type name of save files you want to load: ")
+  name = gets.chomp
+  until file_name_exist?(name)
+    print ("File name don't exist, try again: ")
+    name = gets.chomp
+  end
+  
+  saved_files = File.open("saved_files.txt", "r")
+  hash = JSON.load(saved_files.readline())
+  until hash["name"] == name
+    file = saved_files.readline()
+    hash = JSON.load(file)
+  end
+
+  word = hash["word"]
+
+  display_guess = hash["display_guess"]
+
+  wrong_guesses = hash["wrong_guesses"]
+
+  chars_guessed = hash["chars_guessed"]
+end
 
 while still_have_guesses?(display_guess, wrong_guesses)
-  # system 'clear'
+  system 'clear'
   puts "HANGMAN".center(50)
   puts center_multiline_string(draw_hangman(wrong_guesses))
   puts display_guess.join(" ").center(50)
@@ -249,20 +293,12 @@ while still_have_guesses?(display_guess, wrong_guesses)
   end
 
   if char == "save"
-    system 'clear'
-    
-    puts "SAVE FILES".center(50)
-
-    saved_files = File.open("saved_files.txt", "r").readlines.each_with_index do |file, index|
-      hash = JSON.load(file)
-      puts "#{index + 1}. #{hash["name"]}"
-    end
+    display_saved_files()
 
     print "Name your save file, if you want to modify saved file, type name of saved file: "
     name = gets.chomp
 
     if file_name_exist?(name)
-      #modify saved files
       copy_to_tmp_file(name, word, display_guess, wrong_guesses, chars_guessed)
       modify_files(name)
     else

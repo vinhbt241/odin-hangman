@@ -1,0 +1,2 @@
+{"name":"vinh","word":"shakespeare","display_guess":["_","_","a","_","_","_","_","_","a","_","_"],"wrong_guesses":3,"chars_guessed":["a","b","c","d"]}
+{"name":"an","word":"recipients","display_guess":["_","_","_","_","_","_","_","n","_","_"],"wrong_guesses":3,"chars_guessed":["k","l","m","n"]}
